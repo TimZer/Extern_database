@@ -1,9 +1,18 @@
 <?php
 
-require_once '../includes/ApiService.php';
+require_once 'includes/Database.php';
 
-$api = new ApiService();
-$games = $api->getGames();
+$pdo = new Database();
+$pdo->connect('nba');
+
+
+$stmt = $pdo->conn->query("
+    SELECT *
+    FROM games
+    ORDER BY game_date DESC
+");
+
+$games = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
 
@@ -16,60 +25,92 @@ $games = $api->getGames();
 </head>
 <body class="bg-dark">
 
-<div class="container py-5">
-    <div class="row g-4">
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-warning">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-warning" href="index.php">NBA Games</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="index.php">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="includes/update_games.php">Game toevoegen</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
-        <?php foreach ($games as $game): ?>
+<div class="container ">
 
-            <div class="col-md-6 col-lg-4 col-xl-3">
+    <h1 class="text-white">
+        Opgeslagen NBA Games
+    </h1>
 
-                <div class="card h-100">
+    <?php if (empty($games)): ?>
 
-                    <img src="https://placehold.co/600x300?text=NBA+Game"
-                         class="card-img-top"
-                         alt="NBA Game">
+        <div class="alert alert-warning">
+            Er zijn nog geen wedstrijden opgeslagen.
+        </div>
 
-                    <div class="card-body">
+    <?php else: ?>
 
-                        <h5 class="card-title">
-                            <?= htmlspecialchars($game['visitorTeam']) ?>
-                            vs
-                            <?= htmlspecialchars($game['homeTeam']) ?>
-                        </h5>
+        <div class="row">
 
-                        <p class="card-text">
-                            Datum:
-                            <?= htmlspecialchars($game['date']) ?>
-                            <br>
+            <?php foreach ($games as $game): ?>
 
-                            Start:
-                            <?= htmlspecialchars($game['startTimeET']) ?>
-                            <br>
+                <div class="col-md-6 col-lg-4 mb-4">
 
-                            Arena:
-                            <?= htmlspecialchars($game['arena']) ?>
-                            <br>
+                    <div class="card h-100 bg-secondary text-white border-0 shadow">
 
-                            Score:
-                            <?= htmlspecialchars($game['visitorPts']) ?>
-                            -
-                            <?= htmlspecialchars($game['homePts']) ?>
-                        </p>
+                        <div class="card-body">
 
-                        <a href="#" class="btn btn-primary">
-                            Bekijk wedstrijd
-                        </a>
+                            <h5 class="card-title fw-bold text-warning">
+                                <?php echo ($game['visitor_team']) ?>
+                                vs
+                                <?php echo ($game['home_team']) ?>
+                            </h5>
+
+                            <p class="mb-1">
+                                <strong>Datum:</strong>
+                                <?php echo ($game['game_date']) ?>
+                            </p>
+
+                            <p class="mb-1">
+                                <strong>game duration:</strong>
+                                <?php echo ($game['game_duration']) ?>
+                            </p>
+
+                            <p class="mb-1">
+                                <strong>️Arena:</strong>
+                                <?php echo ($game['arena']) ?>
+                            </p>
+
+                            <p class="mb-1">
+                                <strong>Score:</strong>
+                                <?php echo ($game['visitor_pts']) ?>
+                                -
+                                <?php echo ($game['home_pts']) ?>
+                            </p>
+
+                        </div>
 
                     </div>
 
                 </div>
 
-            </div>
+            <?php endforeach; ?>
 
-        <?php endforeach; ?>
+        </div>
 
-    </div>
+    <?php endif; ?>
+
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
