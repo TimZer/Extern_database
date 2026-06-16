@@ -84,3 +84,19 @@ body {
 .finished {
     background: #64748b;
 }
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+}
+
+th {
+    background: #f4f4f4;
+}
+
+card body
