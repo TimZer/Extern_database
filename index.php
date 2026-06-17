@@ -7,9 +7,20 @@ $pdo->connect('nba');
 
 
 $stmt = $pdo->conn->query("
-    SELECT *
-    FROM games
-    ORDER BY game_date DESC
+    SELECT
+        g.id,
+        g.game_id,
+        g.game_date,
+        g.arena,
+        g.game_duration,
+        t.home_team,
+        t.visitor_team,
+        t.home_pts,
+        t.visitor_pts
+    FROM games g
+    JOIN teams t
+        ON g.id = t.id
+    ORDER BY g.game_date DESC
 ");
 
 $games = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -96,6 +107,17 @@ $games = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 -
                                 <?php echo ($game['home_pts']) ?>
                             </p>
+
+                            <a href="verandering.php?id=<?php echo $game['id'] ?>" class="btn btn-warning">
+                                Bewerk
+                            </a>
+
+
+                            <a href="delete.php?id=<?php echo $game['id']; ?>"
+                            class="btn btn-danger btn-sm"
+                            onclick="return confirm('Weet je zeker dat je deze game wilt verwijderen');">
+                                Verwijderen
+                            </a>
 
                         </div>
 
