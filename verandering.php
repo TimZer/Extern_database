@@ -45,8 +45,12 @@ if(isset($_GET['id'])) {
         SELECT 
             g.id,
             g.arena,
+            g.game_duration,
+            g.game_date,
             t.home_team,
-            t.visitor_team
+            t.home_pts,
+            t.visitor_team,
+            t.visitor_pts
         FROM games g
         JOIN teams t ON g.id = t.id
         WHERE g.id = ?
@@ -82,11 +86,20 @@ else{
     <label>Home Team</label><br>
     <input type="text" name="home_team" value="<?php echo $game['home_team']; ?>"><br>
 
+    <label>Home Points</label><br>
+    <input type="number" name="home_pts" value="<?php echo $game['home_pts']; ?>"><br>
+
     <label>Visitor Team</label><br>
     <input type="text" name="visitor_team" value="<?php echo $game['visitor_team']; ?>"><br>
 
+    <label>Visitor Points</label><br>
+    <input type="date" name="game_date" value="<?php echo $game['game_date']; ?>"><br>
+
     <label>Arena</label><br>
     <input type="text" name="arena" value="<?php echo $game['arena']; ?>"><br>
+
+    <label>Game Duration</label><br>
+    <input type="number" name="game_duration" value="<?php echo $game['game_duration']; ?>"><br>
 
     <button type="submit">opslaan</button>
 
