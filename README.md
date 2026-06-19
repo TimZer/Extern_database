@@ -47,3 +47,24 @@ Wedstrijden kunnen uit de database worden verwijderd.
 ## Doel van het Project
 
 Het doel van dit project is het leren werken met API's, databases en CRUD-operaties binnen een PHP-webapplicatie. Daarnaast wordt ervaring opgedaan met het verwerken en beheren van externe data.
+
+## Database prompt
+
+CREATE DATABASE IF NOT EXISTS nba;
+USE nba;
+
+CREATE TABLE games (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    game_id VARCHAR(50) NOT NULL UNIQUE,
+    game_date DATE NOT NULL,
+    arena VARCHAR(255),
+    game_duration VARCHAR(20)
+);
+
+CREATE TABLE teams (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    home_team VARCHAR(50) NOT NULL,
+    visitor_team VARCHAR(50) NOT NULL,
+    home_pts INT NOT NULL,
+    visitor_pts INT NOT NULL
+);
