@@ -93,6 +93,9 @@ else{
     <input type="text" name="visitor_team" value="<?php echo $game['visitor_team']; ?>"><br>
 
     <label>Visitor Points</label><br>
+    <input type="number" name="visitor_pts" value="<?php echo $game['visitor_pts']; ?>"><br>
+
+    <label>Game Date</label><br>
     <input type="date" name="game_date" value="<?php echo $game['game_date']; ?>"><br>
 
     <label>Arena</label><br>
