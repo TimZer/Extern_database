@@ -68,3 +68,7 @@ CREATE TABLE teams (
     home_pts INT NOT NULL,
     visitor_pts INT NOT NULL
 );
+
+## URL die gebruikt moet worden
+
+http://localhost/Web_Database3/Extern_database/index.php
