@@ -49,7 +49,7 @@ $games = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <a class="nav-link active" href="index.php">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="includes/update_games.php">Game toevoegen</a>
+                    <a class="nav-link" href="update_games.php">Game toevoegen</a>
                 </li>
             </ul>
         </div>
@@ -108,6 +108,7 @@ $games = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <?php echo ($game['home_pts']) ?>
                             </p>
 
+                            <?php var_dump($game['id']); ?>
                             <a href="verandering.php?id=<?php echo $game['id'] ?>" class="btn btn-warning">
                                 Bewerk
                             </a>
