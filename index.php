@@ -1,29 +1,13 @@
 <?php
 
 require_once 'includes/Database.php';
+require_once 'includes/Game.php';
 
 $pdo = new Database();
 $pdo->connect('nba');
 
-
-$stmt = $pdo->conn->query("
-    SELECT
-        g.id,
-        g.game_id,
-        g.game_date,
-        g.arena,
-        g.game_duration,
-        t.home_team,
-        t.visitor_team,
-        t.home_pts,
-        t.visitor_pts
-    FROM games g
-    JOIN teams t
-        ON g.id = t.id
-    ORDER BY g.game_date DESC
-");
-
-$games = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$gameObj = new Game($pdo);
+$games = $gameObj->getAllGames();
 
 ?>
 

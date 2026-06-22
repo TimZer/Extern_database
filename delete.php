@@ -1,19 +1,16 @@
 <?php
 
 require_once 'includes/Database.php';
+require_once 'includes/Game.php';
 
 $db = new Database();
 $db->connect('nba');
 
+$gameObj = new Game($db);
+
 if (isset($_GET['id'])) {
-
-    $id = (int)$_GET['id'];
-    $stmt = $db->conn->prepare("
-    DELETE FROM games WHERE id = ?
-    ");
-
-    $stmt->execute([$id]);
+    $gameObj->deleteGame($_GET['id']);
 }
 
-    header("Location: index.php");
-    exit;
+header("Location: index.php");
+exit;

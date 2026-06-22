@@ -1,72 +1,36 @@
 <?php
 
 require_once 'includes/Database.php';
-
-
+require_once 'includes/Game.php';
 
 $db = new Database();
 $db->connect('nba');
 
+$gameObj = new Game($db);
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    // UPDATE games (only arena)
-    $stmt = $db->conn->prepare("
-        UPDATE games
-        SET arena = ?
-        WHERE id = ?
-    ");
-
-    $stmt->execute([
+    $gameObj->updateGame(
+            $_POST['id'],
             $_POST['arena'],
-            $_POST['id']
-    ]);
-
-    // UPDATE teams (home + visitor)
-    $stmt2 = $db->conn->prepare("
-        UPDATE teams
-        SET home_team = ?,
-            visitor_team = ?
-        WHERE id = ?
-    ");
-
-    $stmt2->execute([
             $_POST['home_team'],
-            $_POST['visitor_team'],
-            $_POST['id']
-    ]);
+            $_POST['visitor_team']
+    );
 
     header("Location: index.php");
+    exit;
 }
 
 if(isset($_GET['id'])) {
+
     $id = $_GET['id'];
+    $game = $gameObj->getGameById($id);
 
-    $stmt = $db->conn->prepare("
-        SELECT 
-            g.id,
-            g.arena,
-            g.game_duration,
-            g.game_date,
-            t.home_team,
-            t.home_pts,
-            t.visitor_team,
-            t.visitor_pts
-        FROM games g
-        JOIN teams t ON g.id = t.id
-        WHERE g.id = ?
-    ");
+} else {
 
-    $stmt->execute([$id]);
-}
-else{
     die("Geen geldige id.");
 }
-
-    $game = $stmt->fetch(PDO::FETCH_ASSOC);
-
-
-
-    ?>
+?>
 <!doctype html>
 <html lang="nl">
 <head>
