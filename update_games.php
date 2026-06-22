@@ -1,78 +1,88 @@
-    <?php
+<?php
 
-    $pdo = new PDO(
+// Maak verbinding met de database
+$pdo = new PDO(
         "mysql:host=localhost;dbname=nba;charset=utf8mb4",
         "root",
         ""
-    );
+);
 
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+// Zorg ervoor dat databasefouten als exceptions worden weergegeven
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // API ophalen
-    $json = file_get_contents("https://api.server.nbaapi.com/api/games");
-    $games = json_decode($json, true);
+// Haal de NBA-games op uit de API
+$json = file_get_contents("https://api.server.nbaapi.com/api/games");
 
-    // Opslaan als formulier verzonden is
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['games'])) {
-        foreach ($_POST['games'] as $index) {
+// Zet de JSON-data om naar een PHP-array
+$games = json_decode($json, true);
 
-            $game = $games['data'][$index];
+// Controleer of het formulier is verzonden
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['games'])) {
 
-            $stmtGame = $pdo->prepare("
-    INSERT INTO games (
-        game_id,
-        game_date,
-        arena,
-        game_duration
-    )
-    VALUES (
-        :game_id,
-        :game_date,
-        :arena,
-        :game_duration
-    )
-    ON DUPLICATE KEY UPDATE
-        game_date = VALUES(game_date),
-        arena = VALUES(arena),
-        game_duration = VALUES(game_duration)
-");
+    // Loop door alle geselecteerde wedstrijden
+    foreach ($_POST['games'] as $index) {
 
-            $stmtGame->execute([
-                    'game_id' => $game['gameId'],
-                    'game_date' => $game['date'],
-                    'arena' => $game['arena'],
-                    'game_duration' => $game['gameDuration']
-            ]);
+        // Haal de geselecteerde wedstrijd op uit de array
+        $game = $games['data'][$index];
 
+        // Query om een game op te slaan in de tabel games
+        $stmtGame = $pdo->prepare("
+            INSERT INTO games (
+                game_id,
+                game_date,
+                arena,
+                game_duration
+            )
+            VALUES (
+                :game_id,
+                :game_date,
+                :arena,
+                :game_duration
+            )
+            ON DUPLICATE KEY UPDATE
+                game_date = VALUES(game_date),
+                arena = VALUES(arena),
+                game_duration = VALUES(game_duration)
+        ");
 
+        // Voer de query uit met de gegevens van de game
+        $stmtGame->execute([
+                'game_id' => $game['gameId'],
+                'game_date' => $game['date'],
+                'arena' => $game['arena'],
+                'game_duration' => $game['gameDuration']
+        ]);
 
-            $stmtTeam = $pdo->prepare("
-    INSERT INTO teams (
-        home_team,
-        visitor_team,
-        home_pts,
-        visitor_pts
-    )
-    VALUES (
-        :home_team,
-        :visitor_team,
-        :home_pts,
-        :visitor_pts
-    )
-");
+        // Query om de teamgegevens op te slaan
+        $stmtTeam = $pdo->prepare("
+            INSERT INTO teams (
+                home_team,
+                visitor_team,
+                home_pts,
+                visitor_pts
+            )
+            VALUES (
+                :home_team,
+                :visitor_team,
+                :home_pts,
+                :visitor_pts
+            )
+        ");
 
-            $stmtTeam->execute([
-                    'home_team' => $game['homeTeam'],
-                    'visitor_team' => $game['visitorTeam'],
-                    'home_pts' => $game['homePts'],
-                    'visitor_pts' => $game['visitorPts']
-            ]);
-        }
-
-        echo "<p style='color:green'>Games opgeslagen!</p>";
+        // Voer de query uit met de teamgegevens
+        $stmtTeam->execute([
+                'home_team' => $game['homeTeam'],
+                'visitor_team' => $game['visitorTeam'],
+                'home_pts' => $game['homePts'],
+                'visitor_pts' => $game['visitorPts']
+        ]);
     }
 
-    ?>
+    // Toon een melding wanneer alles succesvol is opgeslagen
+    echo "<p style='color:green'>Games opgeslagen!</p>";
+}
+
+?>
 
     <!DOCTYPE html>
     <html>
@@ -113,60 +123,70 @@
 
         <div class="row">
 
+            <!-- Loop door alle games uit de API -->
             <?php foreach ($games['data'] as $index => $game): ?>
 
+                <!-- Maak een kaart voor elke wedstrijd -->
                 <div class="col-md-6 col-lg-4 mb-4">
 
                     <div class="card h-100">
 
                         <div class="card-body">
 
+                            <!-- Checkbox om een wedstrijd te selecteren -->
                             <div class="form-check mb-3">
                                 <input
-                                    class="form-check-input"
-                                    type="checkbox"
-                                    name="games[]"
-                                    value="<?= $index ?>">
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="games[]"
+                                        value="<?= $index ?>">
 
                                 <label class="form-check-label">
                                     Selecteer wedstrijd
                                 </label>
                             </div>
 
+                            <!-- Toon de teams -->
                             <h5 class="card-title">
-                                <?= $game['visitorTeam'] ?>
+                                <?php echo $game['visitorTeam'] ?>
                                 vs
-                                <?= $game['homeTeam'] ?>
+                                <?php echo $game['homeTeam'] ?>
                             </h5>
 
+                            <!-- Toon de wedstrijddatum -->
                             <p class="card-text">
                                 <strong>Datum:</strong>
-                                <?= $game['date'] ?>
+                                <?php echo $game['date'] ?>
                             </p>
 
+                            <!-- Toon het uitteam -->
                             <p class="card-text">
                                 <strong>Uit Team:</strong>
-                                <?= $game['visitorTeam'] ?>
+                                <?php echo $game['visitorTeam'] ?>
                             </p>
 
+                            <!-- Toon de score van het uitteam -->
                             <p class="card-text">
                                 <strong>Uit Score:</strong>
-                                <?= $game['visitorPts'] ?>
+                                <?php echo $game['visitorPts'] ?>
                             </p>
 
+                            <!-- Toon het thuisteam -->
                             <p class="card-text">
                                 <strong>Thuis Team:</strong>
-                                <?= $game['homeTeam'] ?>
+                                <?php echo $game['homeTeam'] ?>
                             </p>
 
+                            <!-- Toon de score van het thuisteam -->
                             <p class="card-text">
                                 <strong>Thuis Score:</strong>
-                                <?= $game['homePts'] ?>
+                                <?php echo $game['homePts'] ?>
                             </p>
 
+                            <!-- Toon de arena -->
                             <p class="card-text">
                                 <strong>Arena:</strong>
-                                <?= $game['arena'] ?>
+                                <?php echo $game['arena'] ?>
                             </p>
 
                         </div>

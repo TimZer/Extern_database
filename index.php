@@ -1,12 +1,21 @@
 <?php
 
+// Laad de Database-klasse in
 require_once 'includes/Database.php';
+
+// Laad de Game-klasse in
 require_once 'includes/Game.php';
 
+// Maak een nieuw Database-object aan
 $pdo = new Database();
+
+// Maak verbinding met de database 'nba'
 $pdo->connect('nba');
 
+// Maak een nieuw Game-object aan
 $gameObj = new Game($pdo);
+
+// Haal alle opgeslagen games op uit de database
 $games = $gameObj->getAllGames();
 
 ?>
@@ -46,6 +55,8 @@ $games = $gameObj->getAllGames();
         Opgeslagen NBA Games
     </h1>
 
+
+    <!-- Controleer of er games gevonden zijn -->
     <?php if (empty($games)): ?>
 
         <div class="alert alert-warning">
@@ -56,6 +67,7 @@ $games = $gameObj->getAllGames();
 
         <div class="row">
 
+            <!-- Loop door alle games heen -->
             <?php foreach ($games as $game): ?>
 
                 <div class="col-md-6 col-lg-4 mb-4">
@@ -64,27 +76,33 @@ $games = $gameObj->getAllGames();
 
                         <div class="card-body">
 
+                            <!-- Toon bezoekend team en thuisteam -->
                             <h5 class="card-title fw-bold text-warning">
                                 <?php echo ($game['visitor_team']) ?>
                                 vs
                                 <?php echo ($game['home_team']) ?>
                             </h5>
 
+                            <!-- Toon de wedstrijddatum -->
                             <p class="mb-1">
                                 <strong>Datum:</strong>
                                 <?php echo ($game['game_date']) ?>
                             </p>
 
+                            <!-- Toon de duur van de wedstrijd -->
                             <p class="mb-1">
                                 <strong>game duration:</strong>
                                 <?php echo ($game['game_duration']) ?>
                             </p>
 
+
+                            <!-- Toon de arena -->
                             <p class="mb-1">
                                 <strong>️Arena:</strong>
                                 <?php echo ($game['arena']) ?>
                             </p>
 
+                            <!-- Toon de eindscore -->
                             <p class="mb-1">
                                 <strong>Score:</strong>
                                 <?php echo ($game['visitor_pts']) ?>
@@ -92,12 +110,13 @@ $games = $gameObj->getAllGames();
                                 <?php echo ($game['home_pts']) ?>
                             </p>
 
-                            <?php var_dump($game['id']); ?>
+                            <!-- Link naar pagina om game te bewerken -->
                             <a href="verandering.php?id=<?php echo $game['id'] ?>" class="btn btn-warning">
                                 Bewerk
                             </a>
 
 
+                            <!-- Link om een game te verwijderen -->
                             <a href="delete.php?id=<?php echo $game['id']; ?>"
                             class="btn btn-danger btn-sm"
                             onclick="return confirm('Weet je zeker dat je deze game wilt verwijderen');">
