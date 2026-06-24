@@ -57,7 +57,6 @@ class Game
         $stmt = $this->db->conn->prepare("
             UPDATE games
             SET arena = ?,
-                game_id = ?,
                 game_date = ?,
                 game_duration = ?
             WHERE id = ?
