@@ -23,7 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST['id'],
             $_POST['arena'],
             $_POST['home_team'],
-            $_POST['visitor_team']
+            $_POST['visitor_team'],
+            $_POST['home_pts'],
+            $_POST['visitor_pts'],
+            $_POST['game_date'],
+            $_POST['game_duration']
     );
 
     // Stuur de gebruiker terug naar de homepage
