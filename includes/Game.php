@@ -52,7 +52,7 @@ class Game
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function updateGame($id, $arena, $homeTeam, $visitorTeam, $homePts, $visitorPts,$game_date, $game_duration)
+    public function updateGame($id, $arena, $homeTeam, $visitorTeam, $home_pts, $visitor_pts,$game_date, $game_duration)
     {
         $stmt = $this->db->conn->prepare("
             UPDATE games
@@ -63,7 +63,7 @@ class Game
             WHERE id = ?
         ");
 
-        $stmt->execute([$arena, $id]);
+        $stmt->execute([$arena, $game_date, $game_duration, $id]);
 
         $stmt2 = $this->db->conn->prepare("
             UPDATE teams
@@ -77,6 +77,8 @@ class Game
         $stmt2->execute([
             $homeTeam,
             $visitorTeam,
+            $home_pts,
+            $visitor_pts,
             $id
         ]);
     }
