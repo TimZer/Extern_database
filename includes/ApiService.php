@@ -4,7 +4,7 @@
 class ApiService
 {
     // Basis-URL van de NBA API
-    private $baseUrl = "https://api.server.nbaapi.com/api/";
+    private $baseUrl = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard";
 
     // Haalt alle wedstrijden op uit de API
     public function getGames(): array

@@ -93,7 +93,7 @@ if(isset($_GET['id'])) {
 
     <!-- Invoerveld voor de duur van de wedstrijd -->
     <label>Game Duration</label><br>
-    <input type="number" name="game_duration" value="<?php echo $game['game_duration']; ?>"><br>
+    <input type="text" name="game_duration" value="<?php echo $game['game_duration']; ?>"><br>
 
     <!-- Knop om de wijzigingen op te slaan -->
     <button type="submit">opslaan</button>
