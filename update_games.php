@@ -7,14 +7,21 @@ $pdo = new PDO(
         ""
 );
 
-// Zorg ervoor dat databasefouten als exceptions worden weergegeven
+// Zorg ervoor dat fouten als exceptions worden weergegeven
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// Haal de NBA-games op uit de API
-$json = file_get_contents("https://api.server.nbaapi.com/api/games");
+// Haal de wedstrijden op uit de gratis ESPN API
+$url = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard";
 
-// Zet de JSON-data om naar een PHP-array
+$json = file_get_contents($url);
+
+// Zet de JSON om naar een PHP-array
 $games = json_decode($json, true);
+
+// Controleer of de API werkt
+if (!$games || !isset($games['events'])) {
+    die("Kan geen wedstrijden ophalen.");
+}
 
 // Controleer of het formulier is verzonden
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['games'])) {
@@ -22,18 +29,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['games'])) {
     // Loop door alle geselecteerde wedstrijden
     foreach ($_POST['games'] as $index) {
 
-        // Haal de geselecteerde wedstrijd op uit de array
-        $game = $games['data'][$index];
+        // Haal de gekozen wedstrijd op
+        $game = $games['events'][$index];
 
-        // Query om een game op te slaan in de tabel games
+        // Haal thuis- en uitteam op
+        $home = $game['competitions'][0]['competitors'][0];
+        $away = $game['competitions'][0]['competitors'][1];
+
+        // Arena ophalen
+        $arena = $game['competitions'][0]['venue']['fullName'] ?? "Onbekend";
+
+        // Wedstrijd opslaan
         $stmtGame = $pdo->prepare("
-            INSERT INTO games (
+            INSERT INTO games
+            (
                 game_id,
                 game_date,
                 arena,
                 game_duration
             )
-            VALUES (
+            VALUES
+            (
                 :game_id,
                 :game_date,
                 :arena,
@@ -41,27 +57,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['games'])) {
             )
             ON DUPLICATE KEY UPDATE
                 game_date = VALUES(game_date),
-                arena = VALUES(arena),
-                game_duration = VALUES(game_duration)
+                arena = VALUES(arena)
         ");
 
-        // Voer de query uit met de gegevens van de game
         $stmtGame->execute([
-                'game_id' => $game['gameId'],
+                'game_id' => $game['id'],
                 'game_date' => $game['date'],
-                'arena' => $game['arena'],
-                'game_duration' => $game['gameDuration']
+                'arena' => $arena,
+                'game_duration' => null
         ]);
 
-        // Query om de teamgegevens op te slaan
+        // Teams opslaan
         $stmtTeam = $pdo->prepare("
-            INSERT INTO teams (
+            INSERT INTO teams
+            (
                 home_team,
                 visitor_team,
                 home_pts,
                 visitor_pts
             )
-            VALUES (
+            VALUES
+            (
                 :home_team,
                 :visitor_team,
                 :home_pts,
@@ -69,72 +85,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['games'])) {
             )
         ");
 
-        // Voer de query uit met de teamgegevens
         $stmtTeam->execute([
-                'home_team' => $game['homeTeam'],
-                'visitor_team' => $game['visitorTeam'],
-                'home_pts' => $game['homePts'],
-                'visitor_pts' => $game['visitorPts']
+                'home_team' => $home['team']['displayName'],
+                'visitor_team' => $away['team']['displayName'],
+                'home_pts' => $home['score'],
+                'visitor_pts' => $away['score']
         ]);
     }
 
-    // Toon een melding wanneer alles succesvol is opgeslagen
-    echo "<p style='color:green'>Games opgeslagen!</p>";
+    echo "<div class='alert alert-success'>Games succesvol opgeslagen!</div>";
 }
 
 ?>
 
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>NBA Games Importeren</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
-    <body>
+<!DOCTYPE html>
+<html lang="nl">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-warning">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-warning" href="index.php">NBA Games</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="index.php">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="update_games.php">Game toevoegen</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<head>
+    <meta charset="UTF-8">
+    <title>NBA Games</title>
 
-    <h1>NBA Games</h1>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="index.php">NBA Games</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <h2 class="mb-4">NBA Wedstrijden</h2>
 
     <form method="post">
 
-        <button type="submit" class="btn btn-success mb-4">
+        <button class="btn btn-success mb-4">
             Geselecteerde wedstrijden opslaan
         </button>
 
-        <!-- Cards hier -->
-
         <div class="row">
 
-            <!-- Loop door alle games uit de API -->
-            <?php foreach ($games['data'] as $index => $game): ?>
+            <?php foreach ($games['events'] as $index => $game): ?>
 
-                <!-- Maak een kaart voor elke wedstrijd -->
+                <?php
+
+// Haal thuis- en uitteam op
+                $home = $game['competitions'][0]['competitors'][0];
+                $away = $game['competitions'][0]['competitors'][1];
+
+// Arena ophalen
+                $arena = $game['competitions'][0]['venue']['fullName'] ?? "Onbekend";
+
+                ?>
+
                 <div class="col-md-6 col-lg-4 mb-4">
 
                     <div class="card h-100">
 
                         <div class="card-body">
 
-                            <!-- Checkbox om een wedstrijd te selecteren -->
                             <div class="form-check mb-3">
+
                                 <input
                                         class="form-check-input"
                                         type="checkbox"
@@ -144,49 +158,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['games'])) {
                                 <label class="form-check-label">
                                     Selecteer wedstrijd
                                 </label>
+
                             </div>
 
-                            <!-- Toon de teams -->
                             <h5 class="card-title">
-                                <?php echo $game['visitorTeam'] ?>
+
+                                <?= $away['team']['displayName']; ?>
+
                                 vs
-                                <?php echo $game['homeTeam'] ?>
+
+                                <?= $home['team']['displayName']; ?>
+
                             </h5>
 
-                            <!-- Toon de wedstrijddatum -->
-                            <p class="card-text">
-                                <strong>Datum:</strong>
-                                <?php echo $game['date'] ?>
+                            <p>
+
+                                <strong>Datum:</strong><br>
+
+                                <?= date("d-m-Y H:i", strtotime($game['date'])); ?>
+
                             </p>
 
-                            <!-- Toon het uitteam -->
-                            <p class="card-text">
-                                <strong>Uit Team:</strong>
-                                <?php echo $game['visitorTeam'] ?>
+                            <p>
+
+                                <strong>Uitteam:</strong>
+
+                                <?= $away['team']['displayName']; ?>
+
                             </p>
 
-                            <!-- Toon de score van het uitteam -->
-                            <p class="card-text">
-                                <strong>Uit Score:</strong>
-                                <?php echo $game['visitorPts'] ?>
+                            <p>
+
+                                <strong>Uit score:</strong>
+
+                                <?= $away['score']; ?>
+
                             </p>
 
-                            <!-- Toon het thuisteam -->
-                            <p class="card-text">
-                                <strong>Thuis Team:</strong>
-                                <?php echo $game['homeTeam'] ?>
+                            <p>
+
+                                <strong>Thuisteam:</strong>
+
+                                <?= $home['team']['displayName']; ?>
+
                             </p>
 
-                            <!-- Toon de score van het thuisteam -->
-                            <p class="card-text">
-                                <strong>Thuis Score:</strong>
-                                <?php echo $game['homePts'] ?>
+                            <p>
+
+                                <strong>Thuis score:</strong>
+
+                                <?= $home['score']; ?>
+
                             </p>
 
-                            <!-- Toon de arena -->
-                            <p class="card-text">
+                            <p>
+
                                 <strong>Arena:</strong>
-                                <?php echo $game['arena'] ?>
+
+                                <?= $arena; ?>
+
                             </p>
 
                         </div>
@@ -201,5 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['games'])) {
 
     </form>
 
-    </body>
-    </html>
+</div>
+
+</body>
+</html>
