@@ -1,29 +1,41 @@
 <?php
 
-// Laad de Database-klasse in
+// Laadt de Database-klasse
 require_once 'includes/Database.php';
 
-// Laad de Game-klasse in
+// Laadt de Game-klasse
 require_once 'includes/Game.php';
 
-// Maak een nieuw Database-object aan
+// Laadt de Team-klasse
+require_once 'includes/Team.php';
+
+// Maakt een nieuw Database-object aan
 $db = new Database();
 
-// Maak verbinding met de database 'nba'
+// Maakt verbinding met de database
 $db->connect('nba');
 
-// Maak een nieuw Game-object aan
-$gameObj = new Game($db);
+// Maakt een nieuw Game-object aan
+$game = new Game($db);
 
-// Controleer of er een id is meegegeven via de URL
+// Maakt een nieuw Team-object aan
+$team = new Team($db);
+
+// Controleert of er een id is meegegeven
 if (isset($_GET['id'])) {
 
-    // Verwijder de game met het opgegeven id
-    $gameObj->deleteGame($_GET['id']);
+    // Slaat het id op in een variabele
+    $id = $_GET['id'];
+
+    // Verwijdert eerst de teamgegevens
+    $team->delete($id);
+
+    // Verwijdert daarna de wedstrijd
+    $game->delete($id);
 }
 
-// Stuur de gebruiker terug naar de homepage
+// Stuurt de gebruiker terug naar de homepage
 header("Location: index.php");
 
-// Stop het script na de redirect
+// Stopt het script
 exit;

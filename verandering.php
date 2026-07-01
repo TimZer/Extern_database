@@ -1,52 +1,63 @@
 <?php
 
-// Laad de Database-klasse in
+// Laad de Database-klasse
 require_once 'includes/Database.php';
 
-// Laad de Game-klasse in
+// Laad de Game-klasse
 require_once 'includes/Game.php';
+
+// Laad de Team-klasse
+require_once 'includes/Team.php';
 
 // Maak een nieuw Database-object aan
 $db = new Database();
 
-// Maak verbinding met de database 'nba'
+// Maak verbinding met de database
 $db->connect('nba');
 
-// Maak een nieuw Game-object aan
+// Maak een Game-object aan
 $gameObj = new Game($db);
 
-// Controleer of het formulier is verzonden
+// Maak een Team-object aan
+$teamObj = new Team($db);
+
+// Controleert of het formulier is verzonden
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    // Werk de gegevens van de game bij
-    $gameObj->updateGame(
+    // Werkt de gegevens in de tabel games bij
+    $gameObj->update(
             $_POST['id'],
             $_POST['arena'],
-            $_POST['home_team'],
-            $_POST['visitor_team'],
-            $_POST['home_pts'],
-            $_POST['visitor_pts'],
             $_POST['game_date'],
             $_POST['game_duration']
     );
 
-    // Stuur de gebruiker terug naar de homepage
+    // Werkt de gegevens in de tabel teams bij
+    $teamObj->update(
+            $_POST['id'],
+            $_POST['home_team'],
+            $_POST['visitor_team'],
+            $_POST['home_pts'],
+            $_POST['visitor_pts']
+    );
+
+    // Stuurt de gebruiker terug naar de homepage
     header("Location: index.php");
     exit;
 }
 
-// Controleer of er een game-id is meegegeven
-if(isset($_GET['id'])) {
+// Controleert of er een id is meegegeven
+if (isset($_GET['id'])) {
 
-    // Sla het id op
+    // Slaat het id op
     $id = $_GET['id'];
 
-    // Haal de gegevens van de geselecteerde game op
-    $game = $gameObj->getGameById($id);
+    // Haalt de gegevens van de wedstrijd inclusief teamgegevens op
+    $game = $gameObj->getGamesWithTeamsById($id);
 
 } else {
 
-    // Stop het script als er geen geldig id aanwezig is
+    // Stopt het script als er geen geldig id is
     die("Geen geldige id.");
 }
 ?>

@@ -1,16 +1,19 @@
 <?php
 
+// Laad de benodigde classes
+require_once 'includes/Database.php';
+require_once 'includes/Game.php';
+require_once 'includes/Team.php';
+
 // Maak verbinding met de database
-$pdo = new PDO(
-        "mysql:host=localhost;dbname=nba;charset=utf8mb4",
-        "root",
-        ""
-);
+$db = new Database();
+$db->connect('nba');
 
-// Zorg ervoor dat fouten als exceptions worden weergegeven
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+// Maak de objecten aan
+$gameObj = new Game($db);
+$teamObj = new Team($db);
 
-// Haal de wedstrijden op uit de gratis ESPN API
+// Haal de wedstrijden op uit de ESPN API
 $url = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard";
 
 $json = file_get_contents($url);
@@ -18,79 +21,42 @@ $json = file_get_contents($url);
 // Zet de JSON om naar een PHP-array
 $games = json_decode($json, true);
 
-// Controleer of de API werkt
+// Controleert of de API gegevens terugstuurt
 if (!$games || !isset($games['events'])) {
     die("Kan geen wedstrijden ophalen.");
 }
 
-// Controleer of het formulier is verzonden
+// Controleert of het formulier is verzonden
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['games'])) {
 
-    // Loop door alle geselecteerde wedstrijden
+    // Loopt door alle geselecteerde wedstrijden
     foreach ($_POST['games'] as $index) {
 
-        // Haal de gekozen wedstrijd op
+        // Haalt de gekozen wedstrijd op
         $game = $games['events'][$index];
 
-        // Haal thuis- en uitteam op
+        // Haalt de teams op
         $home = $game['competitions'][0]['competitors'][0];
         $away = $game['competitions'][0]['competitors'][1];
 
-        // Arena ophalen
+        // Haalt de arena op
         $arena = $game['competitions'][0]['venue']['fullName'] ?? "Onbekend";
 
-        // Wedstrijd opslaan
-        $stmtGame = $pdo->prepare("
-            INSERT INTO games
-            (
-                game_id,
-                game_date,
-                arena,
-                game_duration
-            )
-            VALUES
-            (
-                :game_id,
-                :game_date,
-                :arena,
-                :game_duration
-            )
-            ON DUPLICATE KEY UPDATE
-                game_date = VALUES(game_date),
-                arena = VALUES(arena)
-        ");
+        // Slaat de wedstrijd op via de Game-class
+        $gameObj->create(
+                $game['id'],
+                $game['date'],
+                $arena,
+                null
+        );
 
-        $stmtGame->execute([
-                'game_id' => $game['id'],
-                'game_date' => $game['date'],
-                'arena' => $arena,
-                'game_duration' => null
-        ]);
-
-        // Teams opslaan
-        $stmtTeam = $pdo->prepare("
-            INSERT INTO teams
-            (
-                home_team,
-                visitor_team,
-                home_pts,
-                visitor_pts
-            )
-            VALUES
-            (
-                :home_team,
-                :visitor_team,
-                :home_pts,
-                :visitor_pts
-            )
-        ");
-
-        $stmtTeam->execute([
-                'home_team' => $home['team']['displayName'],
-                'visitor_team' => $away['team']['displayName'],
-                'home_pts' => $home['score'],
-                'visitor_pts' => $away['score']
-        ]);
+        // Slaat de teams op via de Team-class
+        $teamObj->create(
+                $home['team']['displayName'],
+                $away['team']['displayName'],
+                $home['score'],
+                $away['score']
+        );
     }
 
     echo "<div class='alert alert-success'>Games succesvol opgeslagen!</div>";
